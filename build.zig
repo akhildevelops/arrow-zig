@@ -67,6 +67,8 @@ pub fn build(b: *std.Build) !void {
                 const sub_test_step = b.step(test_name, test_name);
                 const test_compile = b.addTest(.{ .root_module = test_module });
                 const test_run = b.addRunArtifact(test_compile);
+                const test_install = b.addInstallArtifact(test_compile, .{ .dest_dir = .{ .override = .{ .custom = "testdata" } }, .dest_sub_path = try b.allocator.dupe(u8, test_name) });
+                sub_test_step.dependOn(&test_install.step);
                 sub_test_step.dependOn(&test_run.step);
             },
             else => @panic("No directories are currently being supported"),

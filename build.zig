@@ -55,7 +55,6 @@ pub fn build(b: *std.Build) !void {
                 var parts = std.mem.splitScalar(u8, entry.basename, '.');
                 const file_name = parts.next().?;
                 const test_name = try std.fmt.allocPrint(b.allocator, "{s}_test", .{file_name});
-                defer b.allocator.free(test_name);
 
                 // Path
                 const file_path = try std.fmt.allocPrint(b.allocator, "examples/{s}", .{entry.basename});
@@ -67,7 +66,7 @@ pub fn build(b: *std.Build) !void {
                 const sub_test_step = b.step(test_name, test_name);
                 const test_compile = b.addTest(.{ .root_module = test_module });
                 const test_run = b.addRunArtifact(test_compile);
-                const test_install = b.addInstallArtifact(test_compile, .{ .dest_dir = .{ .override = .{ .custom = "testdata" } }, .dest_sub_path = try b.allocator.dupe(u8, test_name) });
+                const test_install = b.addInstallArtifact(test_compile, .{ .dest_dir = .{ .override = .{ .custom = "testdata" } }, .dest_sub_path = test_name });
                 sub_test_step.dependOn(&test_install.step);
                 sub_test_step.dependOn(&test_run.step);
             },

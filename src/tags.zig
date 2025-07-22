@@ -311,8 +311,7 @@ pub const Tag = union(enum) {
                         try res.writer().print("{d}", .{i});
                     }
                 }
-                try res.append(0);
-                return @ptrCast(res.items.ptr);
+                return try res.toOwnedSliceSentinel(0);
             },
             .Dictionary => |d| switch (d.index) {
                 .i8 => "c",

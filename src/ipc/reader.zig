@@ -89,7 +89,7 @@ pub fn Reader(comptime ReaderType: type) type {
             if (message_len == 0) return null; // EOS
 
             const allocator = self.arena.allocator();
-            var message_buf = try allocator.alloc(u8, message_len);
+            const message_buf = try allocator.alloc(u8, message_len);
             errdefer allocator.free(message_buf);
             const n_read = try self.source.readAll(message_buf);
             if (n_read != message_buf.len) {
@@ -186,7 +186,7 @@ pub fn Reader(comptime ReaderType: type) type {
                     };
                     errdefer for (dict_values.buffers) |b| if (b.len > 0) allocator.free(b);
                     for (0..3) |i| {
-                        var src = v.buffers[i].items;
+                        const src = v.buffers[i].items;
                         if (src.len == 0) continue;
                         dict_values.buffers[i] = try allocator.alignedAlloc(u8, Array.buffer_alignment, src.len);
                         @memcpy(dict_values.buffers[i], src);
@@ -221,7 +221,7 @@ pub fn Reader(comptime ReaderType: type) type {
                 const res: usize = @bitCast(try self.source.readIntLittle(i64));
                 break :brk if (res == -1) size else res;
             } else size;
-            var res = try allocator.alignedAlloc(u8, Array.buffer_alignment, uncompressed_size);
+            const res = try allocator.alignedAlloc(u8, Array.buffer_alignment, uncompressed_size);
             errdefer allocator.free(res);
             const n_read: usize = if (compression) |c| brk: {
                 switch (c.codec) {
@@ -455,7 +455,7 @@ const FileReader = struct {
         const seek_back = -(@as(i64, shared.magic.len) + @sizeOf(FooterSize));
         try file.seekFromEnd(seek_back);
         const pos = try file.getPos();
-        const footer_len = try file.reader().readIntLittle(FooterSize);
+        const footer_len = try file.reader().readInt(FooterSize, .little);
         if (footer_len <= 0 or footer_len > pos) {
             log.err("invalid footer len {d}. it's <= 0 or > {d}", .{ footer_len, pos });
             return IpcError.InvalidFooterLen;
@@ -509,7 +509,7 @@ const FileReader = struct {
     }
 
     pub fn init(allocator: Allocator, fname: []const u8) !Self {
-        var file = try std.fs.cwd().openFile(fname, .{});
+        const file = try std.fs.cwd().openFile(fname, .{});
 
         try readMagic(file, true);
 

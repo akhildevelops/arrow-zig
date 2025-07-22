@@ -63,11 +63,11 @@ pub fn BuilderAdvanced(
 
         fn appendAny(self: *Self, value: anytype) std.mem.Allocator.Error!void {
             return switch (@typeInfo(@TypeOf(value))) {
-                .Null => {
+                .null => {
                     if (OffsetList != void) {
                         try self.offsets.append(self.offsets.getLast());
                     } else {
-                        const to_append = if (comptime @typeInfo(ChildAppendType) == .Optional) null else 0;
+                        const to_append = if (comptime @typeInfo(ChildAppendType) == .optional) null else 0;
                         if (comptime is_fixed) {
                             for (0..fixed_len) |_| try self.child.append(to_append);
                         } else {
@@ -75,7 +75,7 @@ pub fn BuilderAdvanced(
                         }
                     }
                 },
-                .Optional => {
+                .optional => {
                     try self.validity.resize(self.validity.capacity() + 1, value != null);
                     if (value) |v| {
                         try self.appendAny(v);
@@ -84,15 +84,15 @@ pub fn BuilderAdvanced(
                         try self.appendAny(null);
                     }
                 },
-                .Pointer => |p| switch (p.size) {
-                    .Slice => {
+                .pointer => |p| switch (p.size) {
+                    .slice => {
                         if (tag != .List) @compileError("cannot append slice to non-list type");
                         for (value) |v| try self.child.append(v);
                         try self.offsets.append(@intCast(self.child.values.items.len));
                     },
                     else => |t| @compileError("unsupported pointer type " ++ @tagName(t)),
                 },
-                .Array => |a| {
+                .array => |a| {
                     if (a.len != fixed_len)
                         @compileError(
                             std.fmt.comptimePrint(
@@ -123,7 +123,7 @@ pub fn BuilderAdvanced(
             const children = try allocator.alloc(*Array, 1);
             children[0] = try self.child.finish();
 
-            var res = try Array.init(allocator);
+            const res = try Array.init(allocator);
             res.* = .{
                 .tag = tag,
                 .name = @typeName(AppendType) ++ " builder",
@@ -149,14 +149,14 @@ pub fn BuilderAdvanced(
 }
 
 pub fn Builder(comptime Slice: type) type {
-    const nullable = @typeInfo(Slice) == .Optional;
-    const Child = if (nullable) @typeInfo(Slice).Optional.child else Slice;
+    const nullable = @typeInfo(Slice) == .optional;
+    const Child = if (nullable) @typeInfo(Slice).optional.child else Slice;
     const t = @typeInfo(Child);
-    if (!(t == .Pointer and t.Pointer.size == .Slice) and t != .Array) {
+    if (!(t == .pointer and t.pointer.size == .slice) and t != .array) {
         @compileError(@typeName(Slice) ++ " is not a slice or array type");
     }
-    const arr_len = if (t == .Array) t.Array.len else 0;
-    const ChildBuilder = AnyBuilder(if (t == .Pointer) t.Pointer.child else t.Array.child);
+    const arr_len = if (t == .array) t.array.len else 0;
+    const ChildBuilder = AnyBuilder(if (t == .pointer) t.pointer.child else t.array.child);
     return BuilderAdvanced(ChildBuilder, .{ .nullable = nullable, .large = false }, arr_len);
 }
 

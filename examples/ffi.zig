@@ -22,8 +22,8 @@ test "ffi export" {
 test "ffi import" {
     const array = try arrow.sample_arrays.all(allocator);
 
-    var abi_schema = try abi.Schema.init(array);
-    var abi_arr = try abi.Array.init(array);
+    const abi_schema = try abi.Schema.init(array);
+    const abi_arr = try abi.Array.init(array);
     var imported = try arrow.ffi.ImportedArray.init(allocator, abi_arr, abi_schema);
     defer imported.deinit();
 }

@@ -1,15 +1,20 @@
 .{
-	.name = "arrow-zig",
-	.version = "0.0.4",
-
-	.dependencies = .{
-		.@"flatbuffers-zig" = .{
-			.url = "https://github.com/clickingbuttons/flatbuffers-zig/archive/0.0.3.tar.gz",
-			.hash = "1220020db92740fef473cbd8a90e9decf9d74c363d85cf1b5a93ffe5a14bcc6d0e4e"
-		},
-		.lz4 = .{
-			.url = "https://github.com/clickingbuttons/lz4/archive/refs/tags/0.0.4.tar.gz",
-			.hash = "12207e29fd690e26b57091f92181c5fe1cc88b9b908aecff98ca0773bdc45ec7decf",
-		},
-	}
+    .name = .arrow_zig,
+    .version = "0.0.4",
+    .fingerprint = 0x27228191a43ad40a,
+    .dependencies = .{
+        .lz4 = .{
+            .url = "https://github.com/clickingbuttons/lz4/archive/refs/tags/0.0.4.tar.gz",
+            .hash = "12207e29fd690e26b57091f92181c5fe1cc88b9b908aecff98ca0773bdc45ec7decf",
+        },
+        .flatbufferz = .{
+            .url = "https://github.com/travisstaloch/flatbufferz/archive/refs/tags/0.14.0.tar.gz",
+            .hash = "flatbufferz-0.0.1-jV8N7jAVBQAwvpt6q1wCFkoHfqZz7-_GM2PzgwLdDHSl",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
 }

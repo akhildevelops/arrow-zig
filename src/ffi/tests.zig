@@ -24,8 +24,8 @@ fn testExport(array: *Array, comptime format_string: []const u8) !void {
 }
 
 fn testImport(array: *Array) !void {
-    var abi_schema = try abi.Schema.init(array);
-    var abi_arr = try abi.Array.init(array);
+    const abi_schema = try abi.Schema.init(array);
+    const abi_arr = try abi.Array.init(array);
     var imported = try ImportedArray.init(allocator, abi_arr, abi_schema);
     defer imported.deinit();
 }
@@ -36,12 +36,12 @@ test "null export" {
 }
 
 test "flat export" {
-    var a = try arrays.flat(allocator);
+    const a = try arrays.flat(allocator);
     try testExport(a, "s");
 }
 
 test "fixed flat export" {
-    var a = try arrays.fixedFlat(allocator);
+    const a = try arrays.fixedFlat(allocator);
     try testExport(a, "w:3");
 }
 
@@ -66,7 +66,7 @@ test "flat variable export" {
     const values: [*]u8 = @ptrCast(buf2);
     try std.testing.expectEqualStrings("hello", values[0..s.len]);
 
-    var cname = "c1";
+    const cname = "c1";
     a.name = cname;
     var schema = try abi.Schema.init(a);
     defer schema.release.?(@constCast(&schema));
@@ -75,44 +75,44 @@ test "flat variable export" {
 }
 
 test "list export" {
-    var a = try arrays.list(allocator);
+    const a = try arrays.list(allocator);
     try testExport(a, "+l");
 }
 
 test "fixed list export" {
-    var a = try arrays.fixedList(allocator);
+    const a = try arrays.fixedList(allocator);
     try testExport(a, "+w:3");
 }
 
 test "struct export" {
-    var a = try arrays.struct_(allocator);
+    const a = try arrays.struct_(allocator);
     try testExport(a, "+s");
 }
 
 test "dense union export" {
-    var a = try arrays.denseUnion(allocator);
+    const a = try arrays.denseUnion(allocator);
     try testExport(a, "+ud:0,1");
 }
 
 test "sparse union export" {
-    var a = try arrays.sparseUnion(allocator);
+    const a = try arrays.sparseUnion(allocator);
     try testExport(a, "+us:0,1");
 }
 
 test "dict export" {
-    var a = try arrays.dict(allocator);
+    const a = try arrays.dict(allocator);
     try testExport(a, "c");
 }
 
 test "map export" {
-    var a = try arrays.map(allocator);
+    const a = try arrays.map(allocator);
     try testExport(a, "+m");
 }
 
 test "null import" {
     var a = array_mod.null_array;
-    var c = try abi.Array.init(&a);
-    var s = try abi.Schema.init(&a);
+    const c = try abi.Array.init(&a);
+    const s = try abi.Schema.init(&a);
 
     var imported = try ImportedArray.init(allocator, c, s);
     defer imported.deinit();
@@ -122,9 +122,9 @@ test "flat import" {
     const s1 = "hey";
     const s2 = "guy";
     const s3 = "bye";
-    var a = try arrays.fixedFlat(allocator);
-    var abi_schema = try abi.Schema.init(a);
-    var abi_arr = try abi.Array.init(a);
+    const a = try arrays.fixedFlat(allocator);
+    const abi_schema = try abi.Schema.init(a);
+    const abi_arr = try abi.Array.init(a);
 
     var imported = try ImportedArray.init(allocator, abi_arr, abi_schema);
     defer imported.deinit();
@@ -136,51 +136,51 @@ test "flat import" {
 }
 
 test "fixed flat import" {
-    var a = try arrays.fixedFlat(allocator);
+    const a = try arrays.fixedFlat(allocator);
     try testImport(a);
 }
 
 test "flat variable import" {
-    var a = try arrays.variableFlat(allocator);
+    const a = try arrays.variableFlat(allocator);
     try testImport(a);
 }
 
 test "list import" {
-    var a = try arrays.list(allocator);
+    const a = try arrays.list(allocator);
     try testImport(a);
 }
 
 test "fixed list import" {
-    var a = try arrays.fixedList(allocator);
+    const a = try arrays.fixedList(allocator);
     try testImport(a);
 }
 
 test "struct import" {
-    var a = try arrays.struct_(allocator);
+    const a = try arrays.struct_(allocator);
     try testImport(a);
 }
 
 test "dense union import" {
-    var a = try arrays.denseUnion(allocator);
+    const a = try arrays.denseUnion(allocator);
     try testImport(a);
 }
 
 test "sparse union import" {
-    var a = try arrays.sparseUnion(allocator);
+    const a = try arrays.sparseUnion(allocator);
     try testImport(a);
 }
 
 test "dict import" {
-    var a = try arrays.dict(allocator);
+    const a = try arrays.dict(allocator);
     try testImport(a);
 }
 
 test "map import" {
-    var a = try arrays.map(allocator);
+    const a = try arrays.map(allocator);
     try testImport(a);
 }
 
 test "all import" {
-    var a = try arrays.all(allocator);
+    const a = try arrays.all(allocator);
     try testImport(a);
 }

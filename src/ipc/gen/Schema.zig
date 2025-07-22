@@ -81,7 +81,7 @@ pub const Schema = struct {
     }
 
     pub fn initFromArray(allocator: std.mem.Allocator, array: *Array) !Self {
-        var fields = try allocator.alloc(types.Field, array.children.len);
+        const fields = try allocator.alloc(types.Field, array.children.len);
         errdefer allocator.free(fields);
         var dict_id: i64 = 0;
         for (fields, array.children) |*f, c|

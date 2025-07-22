@@ -144,16 +144,15 @@ pub const Tag = union(enum) {
             month_day_nanosecond,
         },
     };
-
     const Self = @This();
     pub fn fromPrimitive(comptime T: type, comptime opts: BinaryOptions) Self {
-        const is_nullable = @typeInfo(T) == .Optional;
-        const ChildType = if (is_nullable) @typeInfo(T).Optional.child else T;
+        const is_nullable = @typeInfo(T) == .optional;
+        const ChildType = if (is_nullable) @typeInfo(T).optional.child else T;
         // https://github.com/ziglang/zig/blob/94e30a756edc4c2182168dabd97d481b8aec0ff2/lib/std/builtin.zig#L228
         return switch (@typeInfo(ChildType)) {
-            .Void, .Null => .null,
-            .Bool => .{ .Bool = .{ .nullable = is_nullable } },
-            .Int => |info| .{ .Int = .{
+            .void, .null => .null,
+            .bool => .{ .Bool = .{ .nullable = is_nullable } },
+            .int => |info| .{ .Int = .{
                 .nullable = is_nullable,
                 .signed = switch (info.signedness) {
                     .signed => true,
@@ -167,7 +166,7 @@ pub const Tag = union(enum) {
                     else => |w| @compileError(std.fmt.comptimePrint("unsupported int width {}", .{w})),
                 },
             } },
-            .Float => |info| .{ .Float = .{
+            .float => |info| .{ .Float = .{
                 .nullable = is_nullable,
                 .bit_width = switch (info.bits) {
                     16 => ._16,
@@ -176,14 +175,14 @@ pub const Tag = union(enum) {
                     else => |w| @compileError(std.fmt.comptimePrint("unsupported float width {}", .{w})),
                 },
             } },
-            .Pointer => |p| switch (p.size) {
-                .Slice => switch (p.child) {
+            .pointer => |p| switch (p.size) {
+                .slice => switch (p.child) {
                     u8, ?u8 => .{ .Binary = opts },
                     else => @compileError("unsupported slice type " ++ @typeName(T)),
                 },
                 else => @compileError("unsupported abi type " ++ @typeName(T)),
             },
-            .Array => |a| switch (a.child) {
+            .array => |a| switch (a.child) {
                 u8, ?u8 => .{ .FixedBinary = .{ .nullable = is_nullable, .fixed_len = a.len } },
                 else => @compileError("unsupported array type " ++ @typeName(T)),
             },

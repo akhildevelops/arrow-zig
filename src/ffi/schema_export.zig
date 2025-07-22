@@ -28,7 +28,7 @@ fn dictionary(arr: *Array, layout: abi.Array.Layout) Allocator.Error!?*abi.Schem
     if (layout != .Dictionary) return null;
 
     const allocator = arr.allocator;
-    var res = try allocator.create(abi.Schema);
+    const res = try allocator.create(abi.Schema);
     errdefer allocator.destroy(res);
     res.* = try abi.Schema.init(arr.children[0]);
     return @ptrCast(res);
@@ -38,7 +38,7 @@ fn privateData(arr: *Array, format_on_heap: bool) Allocator.Error!?*abi.Schema.P
     if (arr.name.len == 0 and !format_on_heap) return null;
 
     const allocator = arr.allocator;
-    var res = try allocator.create(abi.Schema.PrivateData);
+    const res = try allocator.create(abi.Schema.PrivateData);
     errdefer allocator.destroy(res);
     res.* = .{
         .allocator = allocator,

@@ -10,7 +10,7 @@ pub const TypeId = i8;
 
 // Gotta do this so we can "inline switch" on the field type
 fn MakeEnumType(comptime ChildrenBuilders: type) type {
-    const t = @typeInfo(ChildrenBuilders).Struct;
+    const t = @typeInfo(ChildrenBuilders).@"struct";
     var fields: [t.fields.len]std.builtin.Type.EnumField = undefined;
     for (t.fields, 0..) |f, i| {
         fields[i] = .{
@@ -19,7 +19,7 @@ fn MakeEnumType(comptime ChildrenBuilders: type) type {
         };
     }
     return @Type(.{
-        .Enum = .{
+        .@"enum" = .{
             .tag_type = TypeId,
             .fields = fields[0..],
             .decls = &.{},
@@ -29,11 +29,11 @@ fn MakeEnumType(comptime ChildrenBuilders: type) type {
 }
 
 fn MakeAppendType(comptime ChildrenBuilders: type, comptime nullable: bool) type {
-    const t = @typeInfo(ChildrenBuilders).Struct;
+    const t = @typeInfo(ChildrenBuilders).@"struct";
     var fields: [t.fields.len]std.builtin.Type.UnionField = undefined;
     for (t.fields, 0..) |f, i| {
         const ChildBuilderType = f.type.Type();
-        if (nullable and @typeInfo(ChildBuilderType) != .Optional) {
+        if (nullable and @typeInfo(ChildBuilderType) != .optional) {
             @compileError("'" ++ f.name ++ ": " ++ @typeName(ChildBuilderType) ++ "' is not nullable." ++ " ALL nullable structs MUST be nullable");
         }
         fields[i] = .{
@@ -43,8 +43,8 @@ fn MakeAppendType(comptime ChildrenBuilders: type, comptime nullable: bool) type
         };
     }
     const T = @Type(.{
-        .Union = .{
-            .layout = .Auto,
+        .@"union" = .{
+            .layout = .auto,
             .tag_type = MakeEnumType(ChildrenBuilders),
             .fields = fields[0..],
             .decls = &.{},
@@ -77,7 +77,7 @@ pub fn BuilderAdvanced(
 
         pub fn init(allocator: std.mem.Allocator) !Self {
             var children: ChildrenBuilders = undefined;
-            inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+            inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                 const BuilderType = f.type;
                 @field(children, f.name) = try BuilderType.init(allocator);
             }
@@ -99,29 +99,29 @@ pub fn BuilderAdvanced(
 
         fn appendAny(self: *Self, value: anytype) std.mem.Allocator.Error!void {
             return switch (@typeInfo(@TypeOf(value))) {
-                .Null => {
+                .null => {
                     const num = 0;
                     try self.types.append(num);
                     if (opts.dense) {
-                        const first_field = @typeInfo(ChildrenBuilders).Struct.fields[num];
+                        const first_field = @typeInfo(ChildrenBuilders).@"struct".fields[num];
                         var child_builder = &@field(self.children, first_field.name);
 
                         try self.offsets.append(@intCast(child_builder.values.items.len));
                         try child_builder.append(null);
                     } else {
-                        inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+                        inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                             try @field(self.children, f.name).append(null);
                         }
                     }
                 },
-                .Optional => {
+                .optional => {
                     if (value) |v| {
                         try self.appendAny(v);
                     } else {
                         try self.appendAny(null);
                     }
                 },
-                .Union => switch (value) {
+                .@"union" => switch (value) {
                     inline else => |_, tag| {
                         try self.types.append(@intFromEnum(tag));
                         if (opts.dense) {
@@ -130,7 +130,7 @@ pub fn BuilderAdvanced(
                             try self.offsets.append(@intCast(child_builder.values.items.len));
                             try child_builder.append(@field(value, @tagName(tag)));
                         } else {
-                            inline for (@typeInfo(ChildrenBuilders).Struct.fields, 0..) |f, i| {
+                            inline for (@typeInfo(ChildrenBuilders).@"struct".fields, 0..) |f, i| {
                                 const to_append = if (i == @intFromEnum(tag)) @field(value, f.name) else null;
                                 try @field(self.children, f.name).append(to_append);
                             }
@@ -146,12 +146,12 @@ pub fn BuilderAdvanced(
         }
 
         pub fn finish(self: *Self) !*Array {
-            const fields = @typeInfo(ChildrenBuilders).Struct.fields;
+            const fields = @typeInfo(ChildrenBuilders).@"struct".fields;
             const children = try self.allocator.alloc(*Array, fields.len);
             inline for (fields, 0..) |f, i| {
                 children[i] = try @field(self.children, f.name).finish();
             }
-            var res = try Array.init(self.allocator);
+            const res = try Array.init(self.allocator);
             res.* = .{
                 .tag = Tag{ .Union = opts },
                 .name = @typeName(AppendType) ++ " builder",
@@ -235,23 +235,23 @@ test "nullable sparse union advanced with finish" {
 }
 
 fn MakeChildrenBuilders(comptime Union: type, comptime nullable: bool) type {
-    const t = @typeInfo(Union).Union;
+    const t = @typeInfo(Union).@"union";
     var fields: [t.fields.len]std.builtin.Type.StructField = undefined;
     for (t.fields, 0..) |f, i| {
-        if (nullable and @typeInfo(f.type) != .Optional) {
+        if (nullable and @typeInfo(f.type) != .optional) {
             @compileError("'" ++ f.name ++ ": " ++ @typeName(f.type) ++ "' is not nullable." ++ " ALL nullable union fields MUST be nullable");
         }
         fields[i] = .{
             .name = f.name,
             .type = AnyBuilder(f.type),
-            .default_value = null,
+            .default_value_ptr = null,
             .is_comptime = false,
             .alignment = 0,
         };
     }
     return @Type(.{
-        .Struct = .{
-            .layout = .Auto,
+        .@"struct" = .{
+            .layout = .auto,
             .fields = fields[0..],
             .decls = &.{},
             .is_tuple = false,
@@ -260,10 +260,10 @@ fn MakeChildrenBuilders(comptime Union: type, comptime nullable: bool) type {
 }
 
 pub fn Builder(comptime Union: type) type {
-    const nullable = @typeInfo(Union) == .Optional;
-    const Child = if (nullable) @typeInfo(Union).Optional.child else Union;
+    const nullable = @typeInfo(Union) == .optional;
+    const Child = if (nullable) @typeInfo(Union).optional.child else Union;
     const t = @typeInfo(Child);
-    if (t != .Union) {
+    if (t != .@"union") {
         @compileError(@typeName(Union) ++ " is not a union type");
     }
     const ChildrenBuilders = MakeChildrenBuilders(Child, nullable);

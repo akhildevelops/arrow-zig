@@ -94,7 +94,7 @@ fn writeBuffers(
         if (commit) for (0..n_padding) |_| try writer_.writeByte(0);
 
         if (accumulator) |a| {
-            var offset = brk: {
+            const offset = brk: {
                 if (a.items.len == 0) break :brk 0;
                 const last = a.getLast();
                 const padding: i64 = @bitCast(getPadding(Array.buffer_alignment, @bitCast(last.length)));
@@ -321,7 +321,7 @@ pub fn writer(
     allocator: Allocator,
     writer_: anytype,
 ) !Writer(BufferedWriter(@TypeOf(writer_))) {
-    var buffered = std.io.bufferedWriter(writer_);
+    const buffered = std.io.bufferedWriter(writer_);
     return Writer(BufferedWriter(@TypeOf(writer_))).init(allocator, buffered);
 }
 

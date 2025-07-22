@@ -145,7 +145,7 @@ pub fn all(allocator: Allocator) !*Array {
     var validity = try allocator.alignedAlloc(u8, Array.buffer_alignment, 1);
     validity[0] = 0b1110;
 
-    var res = try Array.init(allocator);
+    const res = try Array.init(allocator);
     res.* = .{
         .tag = tags.Tag{ .Struct = .{ .nullable = true } },
         .name = "sample dataframe",

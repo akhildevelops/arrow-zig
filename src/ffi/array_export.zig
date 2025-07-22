@@ -43,7 +43,7 @@ fn dictionary(array: *Array, layout: abi.Array.Layout) Allocator.Error!?*abi.Arr
     if (layout != .Dictionary) return null;
 
     const allocator = array.allocator;
-    var res = try allocator.create(abi.Array);
+    const res = try allocator.create(abi.Array);
     errdefer allocator.destroy(res);
     res.* = try abi.Array.init(array.children[0]);
 

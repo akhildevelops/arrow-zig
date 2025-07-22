@@ -7,42 +7,27 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const flatbuffers_dep = b.dependency("flatbuffers-zig", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const flatbuffers_mod = flatbuffers_dep.module("flatbuffers");
+    const arrow_module = b.createModule(.{ .root_source_file = b.path("src/lib.zig"), .target = target, .optimize = optimize });
 
-    const lz4 = b.dependency("lz4", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const lz4_mod = lz4.module("lz4");
+    // const flatbuffers_module = b.dependency("flatbufferz", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // }).module("flatbufferz");
+
+    // const lz4_module = b.dependency("lz4", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // }).module("lz4");
+
     // Expose to zig dependents
-    const module = b.addModule(name, .{
-        .source_file = .{ .path = path },
-        .dependencies = &.{
-            .{ .name = "flatbuffers", .module = flatbuffers_mod },
-            .{ .name = "lz4", .module = lz4_mod },
-        },
-    });
+    // arrow_module.addImport("flatbuffers", flatbuffers_module);
+    // arrow_module.addImport("lz4", lz4_module);
 
-    const lib = b.addSharedLibrary(.{
-        .name = "arrow-zig", // Avoid naming conflict with libarrow
-        .root_source_file = .{ .path = path },
-        .target = target,
-        .optimize = optimize,
-    });
+    const lib = b.addLibrary(.{ .linkage = .dynamic, .name = "arrow-zig", .root_module = arrow_module });
     b.installArtifact(lib);
 
     const test_step = b.step("test", "Run library tests");
-    const main_tests = b.addTest(.{
-        .root_source_file = .{ .path = path },
-        .target = target,
-        .optimize = optimize,
-    });
-    main_tests.addModule("lz4", lz4_mod);
-    main_tests.addModule("flatbuffers", flatbuffers_mod);
+    const main_tests = b.addTest(.{ .root_module = arrow_module });
     const run_main_tests = b.addRunArtifact(main_tests);
     test_step.dependOn(&run_main_tests.step);
 
@@ -58,13 +43,19 @@ pub fn build(b: *std.Build) !void {
     integration_test_step.dependOn(&ipc_test.step);
     integration_test_step.dependOn(&ffi_test.step);
 
+    const all_examples_module = b.createModule(.{ .root_source_file = b.path("examples/all.zig"), .target = target, .optimize = optimize });
+    all_examples_module.addImport("arrow", arrow_module);
+
+    const build_arrays_module = b.createModule(.{ .root_source_file = b.path("examples/build_arrays.zig"), .target = target, .optimize = optimize });
+    build_arrays_module.addImport("arrow", arrow_module);
+
+    const build_arrays_test_step = b.step("build_arrays_test", "Build Arrays");
+    const build_arrays_test = b.addTest(.{ .root_module = build_arrays_module });
+    b.installArtifact(build_arrays_test);
+    const run_build_arrays_test = b.addRunArtifact(build_arrays_test);
+    build_arrays_test_step.dependOn(&run_build_arrays_test.step);
     const example_test_step = b.step("test-examples", "Run example tests");
-    const example_tests = b.addTest(.{
-        .root_source_file = .{ .path = "./examples/all.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
-    example_tests.addModule("arrow", module);
+    const example_tests = b.addTest(.{ .root_module = all_examples_module });
     const run_example_tests = b.addRunArtifact(example_tests);
     example_test_step.dependOn(&run_example_tests.step);
 }

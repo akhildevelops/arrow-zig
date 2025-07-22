@@ -106,7 +106,7 @@ pub const ImportedArray = struct {
             children[i] = try initArray(allocator, arr.children.?[i].*, schema.children.?[i].*);
         }
 
-        var res = try allocator.create(Array);
+        const res = try allocator.create(Array);
         res.* = .{
             .tag = tag,
             .name = if (schema.name) |n| std.mem.span(n) else "imported array",

@@ -142,7 +142,7 @@ pub fn BuilderAdvanced(
             children[1] = try self.value_builder.finish();
             children[1].name = "value";
 
-            var res = try Array.init(self.allocator);
+            const res = try Array.init(self.allocator);
             res.* = .{
                 .tag = tags.Tag{ .Struct = .{ .nullable = false } },
                 .name = "entries",
@@ -163,7 +163,7 @@ pub fn BuilderAdvanced(
             const children = try allocator.alloc(*Array, 1);
             children[0] = try self.makeStruct();
 
-            var res = try Array.init(self.allocator);
+            const res = try Array.init(self.allocator);
             res.* = .{
                 .tag = tags.Tag{ .Map = .{ .nullable = nullable } },
                 .name = @typeName(AppendType) ++ " builder",
@@ -219,17 +219,17 @@ test "nullable map advanced with finish" {
 }
 
 pub fn Builder(comptime Tuple: type) type {
-    const nullable = @typeInfo(Tuple) == .Optional;
-    const Child = if (nullable) @typeInfo(Tuple).Optional.child else Tuple;
+    const nullable = @typeInfo(Tuple) == .optional;
+    const Child = if (nullable) @typeInfo(Tuple).optional.child else Tuple;
     const t = @typeInfo(Child);
-    if (t != .Struct or !t.Struct.is_tuple or t.Struct.fields.len != 2) {
+    if (t != .@"struct" or !t.@"struct".is_tuple or t.@"struct".fields.len != 2) {
         @compileError(@typeName(Tuple) ++ " is not a 2-element tuple type");
     }
-    const KeyType = t.Struct.fields[0].type;
-    if (@typeInfo(KeyType) == .Optional) {
+    const KeyType = t.@"struct".fields[0].type;
+    if (@typeInfo(KeyType) == .optional) {
         @compileError("map key type '" ++ @typeName(KeyType) ++ "' cannot be nullable");
     }
-    const ValueType = t.Struct.fields[1].type;
+    const ValueType = t.@"struct".fields[1].type;
     const KeyBuilder = AnyBuilder(KeyType);
     const ValueBuilder = AnyBuilder(ValueType);
 
@@ -259,7 +259,7 @@ test "finish" {
     const a = try b.finish();
     defer a.deinit();
 
-    var buffers = a.buffers;
+    const buffers = a.buffers;
     try std.testing.expectEqual(@as(u8, 0b1110), buffers[0][0]);
     try std.testing.expectEqualSlices(i32, &[_]i32{ 0, 0, 1, 2, 4 }, std.mem.bytesAsSlice(i32, buffers[1]));
 

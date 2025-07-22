@@ -16,8 +16,8 @@ pub fn BuilderAdvanced(comptime T: type, comptime opts: Tag.BinaryOptions) type 
         @compileError(std.fmt.comptimePrint("expected fixed_len >= 1, got {d}", .{fixed_len}));
     }
 
-    const NullCount = if (@typeInfo(T) == .Optional) usize else void;
-    const ValidityList = if (@typeInfo(T) == .Optional) std.bit_set.DynamicBitSet else void;
+    const NullCount = if (@typeInfo(T) == .optional) usize else void;
+    const ValidityList = if (@typeInfo(T) == .optional) std.bit_set.DynamicBitSet else void;
     const ValueType = tag.Primitive();
 
     const OffsetType = if (opts.large) i64 else i32;
@@ -60,15 +60,15 @@ pub fn BuilderAdvanced(comptime T: type, comptime opts: Tag.BinaryOptions) type 
 
         fn appendAny(self: *Self, value: anytype) std.mem.Allocator.Error!void {
             switch (@typeInfo(@TypeOf(value))) {
-                .Bool, .Int, .Float, .ComptimeInt, .ComptimeFloat => try self.values.append(value),
-                .Pointer => |p| switch (p.size) {
-                    .Slice => {
+                .bool, .int, .float, .comptime_int, .comptime_float => try self.values.append(value),
+                .pointer => |p| switch (p.size) {
+                    .slice => {
                         try self.values.appendSlice(value);
                         try self.offsets.append(@intCast(self.values.items.len));
                     },
                     else => |t| @compileError("unsupported pointer type " ++ @tagName(t)),
                 },
-                .Array => |a| {
+                .array => |a| {
                     if (a.len != fixed_len)
                         @compileError(
                             std.fmt.comptimePrint(
@@ -78,7 +78,7 @@ pub fn BuilderAdvanced(comptime T: type, comptime opts: Tag.BinaryOptions) type 
                         );
                     try self.values.appendSlice(&value);
                 },
-                .Null => {
+                .null => {
                     if (OffsetList != void) {
                         try self.offsets.append(self.offsets.getLast());
                     } else {
@@ -93,7 +93,7 @@ pub fn BuilderAdvanced(comptime T: type, comptime opts: Tag.BinaryOptions) type 
                         }
                     }
                 },
-                .Optional => {
+                .optional => {
                     const is_null = value == null;
                     try self.validity.resize(self.validity.capacity() + 1, !is_null);
                     if (is_null) {
@@ -146,7 +146,7 @@ pub fn BuilderAdvanced(comptime T: type, comptime opts: Tag.BinaryOptions) type 
 
         pub fn finish(self: *Self) !*Array {
             const allocator = self.values.allocator;
-            var res = try Array.init(allocator);
+            const res = try Array.init(allocator);
             res.* = .{
                 .tag = tag,
                 .name = @typeName(T) ++ " builder",
@@ -162,7 +162,7 @@ pub fn BuilderAdvanced(comptime T: type, comptime opts: Tag.BinaryOptions) type 
 }
 
 pub fn Builder(comptime T: type) type {
-    const nullable = @typeInfo(T) == .Optional;
+    const nullable = @typeInfo(T) == .optional;
     return BuilderAdvanced(T, .{ .large = false, .utf8 = false, .nullable = nullable });
 }
 

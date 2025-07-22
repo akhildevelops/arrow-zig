@@ -78,8 +78,8 @@ pub const PackedFooter = struct {
 
     const Self = @This();
 
-    pub fn init(size_prefixed_bytes: []u8) flatbuffers.Error!Self {
-        return .{ .table = try flatbuffers.Table.init(size_prefixed_bytes) };
+    pub fn init(size_prefixed_bytes: []u8) Self {
+        return .{ .table = flatbuffers.Table.init(size_prefixed_bytes) };
     }
 
     pub fn version(self: Self) flatbuffers.Error!types.MetadataVersion {

@@ -130,7 +130,7 @@ pub fn BuilderAdvanced(
             children[0] = try self.child.finish();
             children[0].name = "dict values";
             self.hashmap.deinit();
-            var res = try Array.init(allocator);
+            const res = try Array.init(allocator);
             res.* = .{
                 .tag = Tag{ .Dictionary = .{ .index = shrunk_index } },
                 .name = @typeName(AppendType) ++ " builder",
@@ -168,9 +168,9 @@ pub fn getAutoEqlFn(comptime K: type, comptime Context: type) (fn (Context, K, K
         fn eql(ctx: Context, a: K, b: K) bool {
             _ = ctx;
             return switch (@typeInfo(K)) {
-                .Pointer => |info| switch (info.size) {
-                    .One, .Many, .C => a == b,
-                    .Slice => std.mem.eql(u8, std.mem.sliceAsBytes(a), std.mem.sliceAsBytes(b)),
+                .pointer => |info| switch (info.size) {
+                    .one, .many, .c => a == b,
+                    .slice => std.mem.eql(u8, std.mem.sliceAsBytes(a), std.mem.sliceAsBytes(b)),
                 },
                 else => std.meta.eql(a, b),
             };
@@ -265,7 +265,7 @@ pub fn Builder(comptime T: type) type {
     return BuilderAdvanced(
         AnyBuilder(T),
         AutoContext(T),
-        .{ .index = .i32, .nullable = @typeInfo(T) == .Optional },
+        .{ .index = .i32, .nullable = @typeInfo(T) == .optional },
     );
 }
 

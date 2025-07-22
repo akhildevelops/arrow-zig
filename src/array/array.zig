@@ -123,6 +123,6 @@ pub const null_array = Array{
 };
 
 test "null array" {
-    var n = null_array;
+    const n = null_array;
     try std.testing.expectEqual(@as(usize, 0), n.null_count);
 }

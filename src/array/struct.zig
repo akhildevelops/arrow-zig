@@ -67,7 +67,7 @@ pub fn BuilderAdvanced(
 
         pub fn init(allocator: std.mem.Allocator) !Self {
             var children: ChildrenBuilders = undefined;
-            inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+            inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                 const BuilderType = f.type;
                 @field(children, f.name) = try BuilderType.init(allocator);
             }
@@ -88,12 +88,12 @@ pub fn BuilderAdvanced(
 
         fn appendAny(self: *Self, value: anytype) std.mem.Allocator.Error!void {
             return switch (@typeInfo(@TypeOf(value))) {
-                .Null => {
-                    inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+                .null => {
+                    inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                         try @field(self.children, f.name).append(null);
                     }
                 },
-                .Optional => {
+                .optional => {
                     const is_null = value == null;
                     try self.validity.resize(self.validity.capacity() + 1, !is_null);
                     if (is_null) {
@@ -103,8 +103,8 @@ pub fn BuilderAdvanced(
                         try self.appendAny(value.?);
                     }
                 },
-                .Struct => {
-                    inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+                .@"struct" => {
+                    inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                         try @field(self.children, f.name).append(@field(value, f.name));
                     }
                 },
@@ -117,13 +117,13 @@ pub fn BuilderAdvanced(
         }
 
         pub fn finish(self: *Self) !*Array {
-            const fields = @typeInfo(ChildrenBuilders).Struct.fields;
+            const fields = @typeInfo(ChildrenBuilders).@"struct".fields;
             const children = try self.allocator.alloc(*Array, fields.len);
             inline for (fields, 0..) |f, i| {
                 children[i] = try @field(self.children, f.name).finish();
                 children[i].name = @ptrCast(f.name);
             }
-            var res = try array.Array.init(self.allocator);
+            const res = try array.Array.init(self.allocator);
             res.* = .{
                 .tag = tags.Tag{ .Struct = .{ .nullable = nullable } },
                 .name = @typeName(AppendType) ++ " builder",
@@ -180,23 +180,23 @@ test "nullable struct advanced with finish" {
 }
 
 fn MakeChildrenBuilders(comptime Struct: type, comptime nullable: bool) type {
-    const t = @typeInfo(Struct).Struct;
+    const t = @typeInfo(Struct).@"struct";
     var fields: [t.fields.len]std.builtin.Type.StructField = undefined;
     for (t.fields, 0..) |f, i| {
-        if (nullable and @typeInfo(f.type) != .Optional) {
+        if (nullable and @typeInfo(f.type) != .optional) {
             @compileError("'" ++ f.name ++ ": " ++ @typeName(f.type) ++ "' is not nullable." ++ " ALL nullable struct fields MUST be nullable" ++ " so that `.append(null)` can append null to each field");
         }
         fields[i] = .{
             .name = f.name,
             .type = AnyBuilder(f.type),
-            .default_value = null,
+            .default_value_ptr = null,
             .is_comptime = false,
             .alignment = 0,
         };
     }
     return @Type(.{
-        .Struct = .{
-            .layout = .Auto,
+        .@"struct" = .{
+            .layout = .auto,
             .fields = fields[0..],
             .decls = &.{},
             .is_tuple = false,
@@ -205,10 +205,10 @@ fn MakeChildrenBuilders(comptime Struct: type, comptime nullable: bool) type {
 }
 
 pub fn Builder(comptime Struct: type) type {
-    const nullable = @typeInfo(Struct) == .Optional;
-    const Child = if (nullable) @typeInfo(Struct).Optional.child else Struct;
+    const nullable = @typeInfo(Struct) == .optional;
+    const Child = if (nullable) @typeInfo(Struct).optional.child else Struct;
     const t = @typeInfo(Child);
-    if (t != .Struct) {
+    if (t != .@"struct") {
         @compileError(@typeName(Struct) ++ " is not a struct type");
     }
     const ChildrenBuilders = MakeChildrenBuilders(Child, nullable);

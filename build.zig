@@ -43,17 +43,47 @@ pub fn build(b: *std.Build) !void {
     integration_test_step.dependOn(&ipc_test.step);
     integration_test_step.dependOn(&ffi_test.step);
 
+    // Unit tests from examples
+
+    var examples_dir = try std.fs.cwd().openDir("examples/", .{ .iterate = true });
+    var examples_dir_iter = try examples_dir.walk(b.allocator);
+    defer examples_dir_iter.deinit();
+
+    while (try examples_dir_iter.next()) |entry| {
+        switch (entry.kind) {
+            .file => {
+                var parts = std.mem.splitScalar(u8, entry.basename, '.');
+                const file_name = parts.next().?;
+                const test_name = try std.fmt.allocPrint(b.allocator, "{s}_test", .{file_name});
+                defer b.allocator.free(test_name);
+
+                // Path
+                const file_path = try std.fmt.allocPrint(b.allocator, "examples/{s}", .{entry.basename});
+                defer b.allocator.free(file_path);
+
+                // Create module and import arrow
+                const test_module = b.createModule(.{ .root_source_file = b.path(file_path), .target = target, .optimize = optimize });
+                test_module.addImport("arrow", arrow_module);
+                const sub_test_step = b.step(test_name, test_name);
+                const test_compile = b.addTest(.{ .root_module = test_module });
+                const test_run = b.addRunArtifact(test_compile);
+                sub_test_step.dependOn(&test_run.step);
+            },
+            else => @panic("No directories are currently being supported"),
+        }
+    }
     const all_examples_module = b.createModule(.{ .root_source_file = b.path("examples/all.zig"), .target = target, .optimize = optimize });
     all_examples_module.addImport("arrow", arrow_module);
 
     const build_arrays_module = b.createModule(.{ .root_source_file = b.path("examples/build_arrays.zig"), .target = target, .optimize = optimize });
     build_arrays_module.addImport("arrow", arrow_module);
 
-    const build_arrays_test_step = b.step("build_arrays_test", "Build Arrays");
-    const build_arrays_test = b.addTest(.{ .root_module = build_arrays_module });
-    b.installArtifact(build_arrays_test);
-    const run_build_arrays_test = b.addRunArtifact(build_arrays_test);
-    build_arrays_test_step.dependOn(&run_build_arrays_test.step);
+    // const build_arrays_test_step = b.step("build_arrays_test", "Build Arrays");
+    // const build_arrays_test = b.addTest(.{ .root_module = build_arrays_module });
+    // b.installArtifact(build_arrays_test);
+    // const run_build_arrays_test = b.addRunArtifact(build_arrays_test);
+    // build_arrays_test_step.dependOn(&run_build_arrays_test.step);
+
     const example_test_step = b.step("test-examples", "Run example tests");
     const example_tests = b.addTest(.{ .root_module = all_examples_module });
     const run_example_tests = b.addRunArtifact(example_tests);

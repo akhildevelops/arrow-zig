@@ -8,24 +8,24 @@ const AnyBuilder = @import("./lib.zig").Builder;
 const Array = array.Array;
 
 fn MakeStructType(comptime ChildrenBuilders: type, comptime nullable: bool) type {
-    const t = @typeInfo(ChildrenBuilders).Struct;
+    const t = @typeInfo(ChildrenBuilders).@"struct";
     var fields: [t.fields.len]std.builtin.Type.StructField = undefined;
     for (t.fields, 0..) |f, i| {
         const ChildBuilderType = f.type.Type();
-        if (nullable and @typeInfo(ChildBuilderType) != .Optional) {
+        if (nullable and @typeInfo(ChildBuilderType) != .optional) {
             @compileError("'" ++ f.name ++ ": " ++ @typeName(ChildBuilderType) ++ "' is not nullable." ++ " ALL nullable struct fields MUST be nullable" ++ " so that `.append(null)` can append null to each field");
         }
         fields[i] = .{
             .name = f.name,
             .type = ChildBuilderType,
-            .default_value = null,
+            .default_value_ptr = null,
             .is_comptime = false,
             .alignment = 0,
         };
     }
     return @Type(.{
-        .Struct = .{
-            .layout = .Auto,
+        .@"struct" = .{
+            .layout = .auto,
             .fields = fields[0..],
             .decls = &.{},
             .is_tuple = false,
@@ -81,7 +81,7 @@ pub fn BuilderAdvanced(
 
         pub fn deinit(self: *Self) void {
             if (ValidityList != void) self.validity.deinit();
-            inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+            inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                 @field(self.children, f.name).deinit();
             }
         }

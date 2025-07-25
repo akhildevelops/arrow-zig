@@ -100,22 +100,21 @@ pub fn validity(allocator: Allocator, bit_set: *std.bit_set.DynamicBitSet, null_
 }
 
 // Dummy allocator
-fn alloc(_: *anyopaque, _: usize, _: u8, _: usize) ?[*]u8 {
+fn alloc(_: *anyopaque, _: usize, _: std.mem.Alignment, _: usize) ?[*]u8 {
     return null;
 }
-fn resize(_: *anyopaque, _: []u8, _: u8, _: usize, _: usize) bool {
+fn resize(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) bool {
     return false;
 }
-fn free(_: *anyopaque, _: []u8, _: u8, _: usize) void {}
+fn free(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize) void {}
+fn remap(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) ?[*]u8 {
+    return null;
+}
 
 pub const null_array = Array{
     .tag = .Null,
     .name = &.{},
-    .allocator = Allocator{ .ptr = undefined, .vtable = &Allocator.VTable{
-        .alloc = alloc,
-        .resize = resize,
-        .free = free,
-    } },
+    .allocator = Allocator{ .ptr = undefined, .vtable = &Allocator.VTable{ .alloc = alloc, .resize = resize, .free = free, .remap = remap } },
     .length = 0,
     .null_count = 0,
     .buffers = .{ &.{}, &.{}, &.{} },

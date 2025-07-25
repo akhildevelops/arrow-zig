@@ -72,9 +72,9 @@ pub fn Reader(comptime ReaderType: type) type {
 
         fn readMessageLen(self: *Self) !usize {
             // > This component was introduced in version 0.15.0 in part to address the 8-byte alignment requirement of Flatbuffers
-            var res = try self.source.readIntLittle(shared.MessageLen);
+            var res = try self.source.readInt(shared.MessageLen, .little);
             while (res == shared.continuation) {
-                res = try self.source.readIntLittle(shared.MessageLen);
+                res = try self.source.readInt(shared.MessageLen, .little);
             }
 
             return @intCast(res);
@@ -218,7 +218,7 @@ pub fn Reader(comptime ReaderType: type) type {
             // > follows is not compressed, which can be useful for cases where
             // > compression does not yield appreciable savings.
             const uncompressed_size = if (compression != null) brk: {
-                const res: usize = @bitCast(try self.source.readIntLittle(i64));
+                const res: usize = @bitCast(try self.source.readInt(i64, .little));
                 break :brk if (res == -1) size else res;
             } else size;
             const res = try allocator.alignedAlloc(u8, Array.buffer_alignment, uncompressed_size);
@@ -231,8 +231,10 @@ pub fn Reader(comptime ReaderType: type) type {
                         break :brk try stream.reader().readAll(res);
                     },
                     .zstd => {
-                        var stream = std.compress.zstd.decompressStream(self.arena.allocator(), self.source);
-                        defer stream.deinit();
+                        // Put this in a fixed buffer
+                        const temp_window = try allocator.alloc(u8, std.compress.zstd.DecompressorOptions.default_window_buffer_len);
+                        defer allocator.free(temp_window);
+                        var stream = std.compress.zstd.decompressor(self.source, .{ .window_buffer = temp_window });
                         break :brk try stream.reader().readAll(res);
                     },
                 }

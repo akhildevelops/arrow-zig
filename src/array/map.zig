@@ -10,24 +10,24 @@ const Array = array.Array;
 const Allocator = std.mem.Allocator;
 
 fn MakeTupleType(comptime KeyType: type, comptime ValueType: type) type {
-    if (@typeInfo(KeyType) == .Optional) {
+    if (@typeInfo(KeyType) == .optional) {
         @compileError("map key type '" ++ @typeName(KeyType) ++ "' cannot be nullable");
     }
     return @Type(.{
-        .Struct = .{
-            .layout = .Auto,
+        .@"struct" = .{
+            .layout = .auto,
             .fields = &[2]std.builtin.Type.StructField{
                 .{
                     .name = "0",
                     .type = KeyType,
-                    .default_value = null,
+                    .default_value_ptr = null,
                     .is_comptime = false,
                     .alignment = 0,
                 },
                 .{
                     .name = "1",
                     .type = ValueType,
-                    .default_value = null,
+                    .default_value_ptr = null,
                     .is_comptime = false,
                     .alignment = 0,
                 },

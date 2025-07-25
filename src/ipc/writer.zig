@@ -79,7 +79,7 @@ fn writeBuffers(
     writer_: anytype,
     accumulator: ?*std.ArrayList(Buffer),
 ) !usize {
-    const commit = @typeInfo(@TypeOf(writer_)) == .Struct;
+    const commit = @typeInfo(@TypeOf(writer_)) == .@"struct";
 
     var res: usize = 0;
 
@@ -226,8 +226,8 @@ pub fn Writer(comptime WriterType: type) type {
             const n_padding = getPadding(message_alignment, bytes.len);
             const len: shared.MessageLen = @intCast(bytes.len + n_padding);
 
-            try self.dest.writer().writeIntLittle(shared.MessageLen, shared.continuation);
-            try self.dest.writer().writeIntLittle(shared.MessageLen, len);
+            try self.dest.writer().writeInt(shared.MessageLen, shared.continuation, .little);
+            try self.dest.writer().writeInt(shared.MessageLen, len, .little);
             try self.dest.writer().writeAll(bytes);
             for (0..n_padding) |_| try self.dest.writer().writeByte(0);
 
@@ -408,7 +408,7 @@ const FileWriter = struct {
         try self.writer.dest.writer().writeAll(footer);
 
         const len: shared.MessageLen = @intCast(footer.len);
-        try self.writer.dest.writer().writeIntLittle(shared.MessageLen, len);
+        try self.writer.dest.writer().writeInt(shared.MessageLen, len, .little);
 
         try self.writeMagic(false);
 

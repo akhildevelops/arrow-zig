@@ -9,19 +9,19 @@ pub fn build(b: *std.Build) !void {
 
     const arrow_module = b.createModule(.{ .root_source_file = b.path("src/lib.zig"), .target = target, .optimize = optimize });
 
-    // const flatbuffers_module = b.dependency("flatbufferz", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // }).module("flatbufferz");
+    const flatbuffers_dep = b.dependency("flatbuffers-zig", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const lz4_module = b.dependency("lz4", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("lz4");
 
-    // const lz4_module = b.dependency("lz4", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // }).module("lz4");
-
+    const flatbuffers_module = flatbuffers_dep.module("flatbuffers");
     // Expose to zig dependents
-    // arrow_module.addImport("flatbuffers", flatbuffers_module);
-    // arrow_module.addImport("lz4", lz4_module);
+    arrow_module.addImport("flatbuffers", flatbuffers_module);
+    arrow_module.addImport("lz4", lz4_module);
 
     const lib = b.addLibrary(.{ .linkage = .dynamic, .name = "arrow-zig", .root_module = arrow_module });
     b.installArtifact(lib);

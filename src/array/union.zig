@@ -92,7 +92,7 @@ pub fn BuilderAdvanced(
         pub fn deinit(self: *Self) void {
             self.types.deinit();
             if (OffsetList != void) self.offsets.deinit();
-            inline for (@typeInfo(ChildrenBuilders).Struct.fields) |f| {
+            inline for (@typeInfo(ChildrenBuilders).@"struct".fields) |f| {
                 @field(self.children, f.name).deinit();
             }
         }

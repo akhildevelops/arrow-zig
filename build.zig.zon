@@ -4,12 +4,12 @@
     .fingerprint = 0x27228191a43ad40a,
     .dependencies = .{
         .lz4 = .{
-            .url = "https://github.com/clickingbuttons/lz4/archive/refs/tags/0.0.4.tar.gz",
-            .hash = "12207e29fd690e26b57091f92181c5fe1cc88b9b908aecff98ca0773bdc45ec7decf",
+            .url = "https://github.com/akhildevelops/lz4/archive/refs/heads/master.tar.gz",
+            .hash = "lz4-0.12.0-AAAAAMF0AABZR_rPXQ-jhiCLp7Q1TzR5mknsMDwpAbUD",
         },
-        .flatbufferz = .{
-            .url = "https://github.com/travisstaloch/flatbufferz/archive/refs/tags/0.14.0.tar.gz",
-            .hash = "flatbufferz-0.0.1-jV8N7jAVBQAwvpt6q1wCFkoHfqZz7-_GM2PzgwLdDHSl",
+        .@"flatbuffers-zig" = .{
+            .url = "https://github.com/akhildevelops/flatbuffers-zig/archive/refs/heads/master.zip",
+            .hash = "flatbuffers-0.0.3-x1VvmxehAAABOV0569p6Diy1YusTuXP5ziUc6K-Zf-na",
         },
     },
     .paths = .{

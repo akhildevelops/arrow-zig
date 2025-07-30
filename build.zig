@@ -7,7 +7,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const arrow_module = b.addModule(.{ .root_source_file = b.path("src/lib.zig"), .target = target, .optimize = optimize });
+    const arrow_module = b.addModule("arrow", .{ .root_source_file = b.path("src/lib.zig"), .target = target, .optimize = optimize });
 
     const flatbuffers_dep = b.dependency("flatbuffers-zig", .{
         .target = target,

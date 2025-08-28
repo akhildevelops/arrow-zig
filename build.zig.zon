@@ -9,7 +9,7 @@
         },
         .@"flatbuffers-zig" = .{
             .url = "https://github.com/akhildevelops/flatbuffers-zig/archive/refs/heads/master.zip",
-            .hash = "flatbuffers-0.0.3-x1VvmzmhAABEVooq1P_ZXmifl3V9tey2uB6J8szAeddl",
+            .hash = "flatbuffers-0.0.4-x1Vvm1qhAACVjRW7EiiiOYgd5hkJ9qtKn6dYg6IWkzjd",
         },
     },
     .paths = .{
